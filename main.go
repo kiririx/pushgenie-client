@@ -4,16 +4,14 @@ import (
 	"github.com/gorilla/websocket"
 	"log"
 	"net/url"
-	"os"
-	"os/signal"
 	"time"
 )
 
 func main() {
-	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt)
+	// interrupt := make(chan os.Signal, 1)
+	// signal.Notify(interrupt, os.Interrupt)
 
-	u := url.URL{Scheme: "ws", Host: "101.42.239.41:10041", Path: "/ws/receive"}
+	u := url.URL{Scheme: "ws", Host: "127.0.0.1:10041", Path: "/ws/receive"}
 	log.Printf("connecting to %s", u.String())
 
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
@@ -40,10 +38,14 @@ func main() {
 		select {
 		case <-done:
 		case <-time.After(time.Second):
-			err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "123"))
+			// err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "123"))
+			// if err != nil {
+			// 	log.Println("write close:", err)
+			// 	return
+			// }
+			err := c.WriteMessage(1, []byte("abc"))
 			if err != nil {
-				log.Println("write close:", err)
-				return
+				log.Println(err)
 			}
 		}
 	}
