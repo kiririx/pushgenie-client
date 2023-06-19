@@ -1,17 +1,16 @@
 package main
 
 import (
+	"encoding/json"
+	"github.com/gen2brain/beeep"
 	"github.com/gorilla/websocket"
 	"log"
 	"net/url"
-	"time"
 )
 
 func main() {
-	// interrupt := make(chan os.Signal, 1)
-	// signal.Notify(interrupt, os.Interrupt)
-
-	u := url.URL{Scheme: "ws", Host: "127.0.0.1:10041", Path: "/ws/receive"}
+	host := ""
+	u := url.URL{Scheme: "ws", Host: host, Path: "/ws/receive"}
 	log.Printf("connecting to %s", u.String())
 
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
@@ -20,33 +19,21 @@ func main() {
 	}
 	defer c.Close()
 
-	done := make(chan struct{})
-
-	go func() {
-		defer close(done)
-		for {
-			_, message, err := c.ReadMessage()
-			if err != nil {
-				log.Println("read:", err)
-				return
-			}
-			log.Printf("received message: %s", message)
-		}
-	}()
+	log.Printf("已经连接到%s", host)
 
 	for {
-		select {
-		case <-done:
-		case <-time.After(time.Second):
-			// err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "123"))
-			// if err != nil {
-			// 	log.Println("write close:", err)
-			// 	return
-			// }
-			err := c.WriteMessage(1, []byte("abc"))
-			if err != nil {
-				log.Println(err)
-			}
+		_, message, err := c.ReadMessage()
+		if err != nil {
+			log.Printf("读取消息失败, err=%s", err)
+			return
+		}
+		log.Printf("received message: %s", message)
+
+		resp := make(map[string]string)
+		_ = json.Unmarshal(message, &resp)
+		err = beeep.Notify("短信", resp["message"], "icon.jpeg")
+		if err != nil {
+			log.Printf("发送系统通知失败, err=" + err.Error())
 		}
 	}
 }
