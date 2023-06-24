@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
+	"fmt"
 	"github.com/gen2brain/beeep"
 	"github.com/gorilla/websocket"
 	"log"
@@ -9,7 +11,13 @@ import (
 	"time"
 )
 
+var host *string
+var port *int
+
 func main() {
+	host = flag.String("h", "127.0.0.1", "输入域名或ip, 默认127.0.0.1")
+	port = flag.Int("p", 10041, "输入端口, 默认10041")
+	flag.Parse()
 	for {
 		_ = connect()
 		time.Sleep(time.Second * 5)
@@ -17,8 +25,14 @@ func main() {
 }
 
 func connect() error {
-	host := "101.42.239.41:10042"
-	u := url.URL{Scheme: "ws", Host: host, Path: "/ws/receive"}
+	defer func() {
+		err := recover()
+		if err != nil {
+			log.Printf("app-recover.")
+		}
+	}()
+
+	u := url.URL{Scheme: "ws", Host: fmt.Sprintf("%s:%v", *host, *port), Path: "/ws/receive"}
 	log.Printf("connecting to %s", u.String())
 
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
@@ -27,7 +41,7 @@ func connect() error {
 	}
 	defer c.Close()
 
-	log.Printf("已经连接到%s", host)
+	log.Printf("已经连接到%s", *host)
 
 	for {
 		// read message
