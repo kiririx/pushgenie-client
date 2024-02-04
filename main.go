@@ -43,6 +43,11 @@ func connect() error {
 
 	log.Printf("已经连接到%s", *host)
 
+	// 设置Ping消息的处理程序
+	c.SetPingHandler(func(appData string) error {
+		return c.WriteMessage(websocket.PongMessage, []byte(appData))
+	})
+
 	for {
 		// read message
 		_, message, err := c.ReadMessage()
